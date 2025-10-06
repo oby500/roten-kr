@@ -1,0 +1,16 @@
+{
+  "name": "roten-kr",
+  "version": "1.0.0",
+  "description": "정부지원사업 통합 검색 플랫폼",
+  "scripts": {
+    "dev": "python app_safe.py",
+    "build": "echo 'Build complete'",
+    "start": "python app_safe.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oby500/roten-kr.git"
+  },
+  "author": "Roten Team",
+  "license": "MIT"
+}
