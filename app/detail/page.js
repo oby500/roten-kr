@@ -75,6 +75,19 @@ export default function DetailPage() {
       console.error('공유 실패:', error);
     }
   };
+  const getSupportTypeColor = (type) => {
+    if (type.includes('자금')) return 'bg-green-100 text-green-700';
+    if (type.includes('R&D')) return 'bg-blue-100 text-blue-700';
+    if (type.includes('교육') || type.includes('컨설팅')) return 'bg-purple-100 text-purple-700';
+    if (type.includes('시설') || type.includes('공간')) return 'bg-yellow-100 text-yellow-700';
+    if (type.includes('마케팅') || type.includes('판로')) return 'bg-pink-100 text-pink-700';
+    if (type.includes('인력')) return 'bg-indigo-100 text-indigo-700';
+    if (type.includes('창업')) return 'bg-teal-100 text-teal-700';
+    if (type.includes('혁신')) return 'bg-cyan-100 text-cyan-700';
+    if (type.includes('성장')) return 'bg-lime-100 text-lime-700';
+    return 'bg-gray-100 text-gray-600';
+  };
+
 
   if (loading) {
     return (
@@ -159,6 +172,24 @@ export default function DetailPage() {
                     }`}>
                       {business.status || '진행중'}
                     </span>
+
+                    {/* 지역 태그 */}
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                      📍 {business.region || '전국'}
+                    </span>
+
+                    {/* 지원 유형 태그 */}
+                    {business.support_types && business.support_types.length > 0 ? (
+                      business.support_types.slice(0, 2).map((type, idx) => (
+                        <span key={idx} className={`px-3 py-1 rounded-full text-sm font-medium ${getSupportTypeColor(type)}`}>
+                          {type}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+                        지원사업
+                      </span>
+                    )}
                     {business.is_popular && (
                       <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium flex items-center">
                         <TrendingUp className="w-4 h-4 mr-1" />
