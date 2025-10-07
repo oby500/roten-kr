@@ -134,9 +134,27 @@ export default function DetailPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
+                    {/* D-day 배지 */}
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      business.status === '진행중' 
-                        ? 'bg-green-100 text-green-700' 
+                      business.days_remaining === null
+                        ? 'bg-gray-100 text-gray-600'
+                        : business.days_remaining <= 3
+                        ? 'bg-red-500 text-white'
+                        : business.days_remaining <= 7
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-blue-500 text-white'
+                    }`}>
+                      {business.days_remaining === null
+                        ? '상시'
+                        : business.days_remaining === 0
+                        ? 'D-Day'
+                        : business.days_remaining < 0
+                        ? '마감'
+                        : `D-${business.days_remaining}`}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      business.status === '진행중'
+                        ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}>
                       {business.status || '진행중'}
