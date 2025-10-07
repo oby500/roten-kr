@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase 연결 - SERVICE ROLE KEY 사용
+// Supabase 연결 - 새로운 SERVICE ROLE KEY 사용
 const supabaseUrl = 'https://csuziaogycciwgxxmahm.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdXppYW9neWNjaXdneHhtYWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNzA4NjY4NSwiZXhwIjoyMDQyNjYyNjg1fQ.xqQiWQ0vUqL4N07nuKBkjFA2gEjQMpfzX8g7a6eJvus';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdXppYW9neWNjaXdneHhtYWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzYxNTc4MCwiZXhwIjoyMDY5MTkxNzgwfQ.HnhM7zSLzi7lHVPd2IVQKIACDq_YA05mBMgZbSN1c9Q';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
-    persistSession: false
+    persistSession: false,
+    autoRefreshToken: false
   }
 });
 
@@ -25,7 +26,7 @@ export async function GET() {
 
     console.log('통계 API: 전체', totalCount, '개 데이터');
 
-    // 상태별 통계는 간단히
+    // 상태별 통계
     const statusCounts = {
       '진행중': totalCount || 5686
     };
