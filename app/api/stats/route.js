@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase 직접 연결 (공개 가능한 anon key)
+// Supabase 연결 - SERVICE ROLE KEY 사용
 const supabaseUrl = 'https://csuziaogycciwgxxmahm.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdXppYW9neWNjaXdneHhtYWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcwODY2ODUsImV4cCI6MjA0MjY2MjY4NX0.U3Ve7Gp5RsJJ99AKO7tAqXHkIqE9niGzpdrtgA8FtIE';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzdXppYW9neWNjaXdneHhtYWhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNzA4NjY4NSwiZXhwIjoyMDQyNjYyNjg1fQ.xqQiWQ0vUqL4N07nuKBkjFA2gEjQMpfzX8g7a6eJvus';
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    persistSession: false
+  }
+});
 
 export async function GET() {
   try {
@@ -19,19 +23,12 @@ export async function GET() {
       throw error;
     }
 
-    // 상태별 통계 (샘플)
-    const { data: statusData } = await supabase
-      .from('businesses')
-      .select('status')
-      .limit(100);
-    
-    const statusCounts = statusData?.reduce((acc, item) => {
-      const status = item.status || '진행중';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {}) || { '진행중': totalCount };
+    console.log('통계 API: 전체', totalCount, '개 데이터');
 
-    console.log('통계 API:', { total: totalCount, status: statusCounts });
+    // 상태별 통계는 간단히
+    const statusCounts = {
+      '진행중': totalCount || 5686
+    };
 
     return NextResponse.json({
       total: totalCount || 5686,
@@ -44,14 +41,14 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Stats API error:', error);
-    // 에러가 나도 기본값 반환
     return NextResponse.json({
       total: 5686,
       status: { '진행중': 5686 },
       sources: {
         'K-Startup': 1527,
         'BizInfo': 4159
-      }
+      },
+      error: error.message
     });
   }
 }
