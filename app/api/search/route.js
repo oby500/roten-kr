@@ -15,7 +15,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 function getDaysRemaining(endDate) {
   if (!endDate) return null;
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
   const diff = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
   return diff;
 }
@@ -52,36 +54,67 @@ function parseSupportType(item) {
   return types;
 }
 
-// 요약 생성
+// 요약 생성 - 3줄 핵심 요약
 function generateSummary(item) {
   const summaryPoints = [];
   
-  // 지원 규모
+  // 1. 핵심 혜택 (지원 규모)
   if (item.tot_sprt_amount || item.sprt_scale) {
-    summaryPoints.push(`💰 지원규모: ${item.tot_sprt_amount || item.sprt_scale}`);
+    const amount = item.tot_sprt_amount || item.sprt_scale;
+    summaryPoints.push({
+      icon: '💰',
+      label: '지원규모',
+      text: amount
+    });
+  } else {
+    summaryPoints.push({
+      icon: '💰',
+      label: '지원규모',
+      text: '지원금 제공'
+    });
   }
   
-  // 지원 대상
+  // 2. 주요 조건 (지원 대상)
   if (item.sprt_trgt || item.aply_trgt_ctnt) {
     const target = item.sprt_trgt || item.aply_trgt_ctnt;
-    if (target.length < 100) {
-      summaryPoints.push(`👥 대상: ${target}`);
-    }
+    const shortTarget = target.length > 50 ? target.substring(0, 50) + '...' : target;
+    summaryPoints.push({
+      icon: '✅',
+      label: '지원대상',
+      text: shortTarget
+    });
+  } else {
+    summaryPoints.push({
+      icon: '✅',
+      label: '지원대상',
+      text: '중소기업 및 스타트업'
+    });
   }
   
-  // 신청 기간
+  // 3. 특별 포인트 (마감일 또는 주요 내용)
   const daysLeft = getDaysRemaining(item.reqst_end_ymd || item.pbanc_rcpt_end_dt);
-  if (daysLeft !== null && daysLeft >= 0) {
-    if (daysLeft === 0) summaryPoints.push('⏰ 오늘 마감!');
-    else if (daysLeft <= 7) summaryPoints.push(`⏰ 마감 ${daysLeft}일 전`);
-    else summaryPoints.push(`📅 D-${daysLeft}`);
-  }
-  
-  // 주요 내용 (짧게)
-  const content = item.bsns_sumry || item.pblanc_cn || item.sprt_cn || '';
-  if (content) {
-    const shortContent = content.substring(0, 80) + (content.length > 80 ? '...' : '');
-    summaryPoints.push(`📋 ${shortContent}`);
+  if (daysLeft !== null && daysLeft >= 0 && daysLeft <= 7) {
+    summaryPoints.push({
+      icon: '⚡',
+      label: '긴급',
+      text: daysLeft === 0 ? '오늘 마감!' : `마감 ${daysLeft}일 전!`
+    });
+  } else {
+    const content = item.bsns_sumry || item.pblanc_cn || item.sprt_cn || '';
+    if (content) {
+      const shortContent = content.substring(0, 40) + (content.length > 40 ? '...' : '');
+      summaryPoints.push({
+        icon: '🎯',
+        label: '특징',
+        text: shortContent
+      });
+    } else {
+      summaryPoints.push({
+        icon: '🎯',
+        label: '특징',
+        text: '우수 기업 선정 지원'
+      });
+    }
   }
   
   return summaryPoints;
@@ -91,32 +124,74 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
+    const limit = parseInt(searchParams.get('limit') || '10000'); // 기본값을 10000으로 설정
     const filters = {
-      businessStage: searchParams.get('stage') || '', // 예비창업, 1년차, 2년차, 3년차 이상
-      supportType: searchParams.get('type') || '', // 자금, R&D, 교육, 시설
+      businessStage: searchParams.get('stage') || '',
+      supportType: searchParams.get('type') || '',
       region: searchParams.get('region') || '',
-      deadline: searchParams.get('deadline') || '' // 긴급, 이번주, 이번달
+      deadline: searchParams.get('deadline') || ''
     };
     
-    console.log('검색 요청:', { query, filters });
+    console.log('검색 요청:', { query, limit, filters });
 
     let allData = [];
-    const today = new Date();
 
-    // 1. bizinfo_complete 데이터
-    const { data: bizinfoData } = await supabase
-      .from('bizinfo_complete')
-      .select('*')
-      .range(0, 10000);
+    // 1. bizinfo_complete 전체 데이터 가져오기
+    console.log('bizinfo_complete 데이터 로드 중...');
+    let bizinfoData = [];
+    let bizinfoOffset = 0;
+    const bizinfoLimit = 1000;
+    
+    while (true) {
+      const { data, error } = await supabase
+        .from('bizinfo_complete')
+        .select('*')
+        .range(bizinfoOffset, bizinfoOffset + bizinfoLimit - 1);
+      
+      if (error) {
+        console.error('bizinfo 에러:', error);
+        break;
+      }
+      
+      if (!data || data.length === 0) break;
+      
+      bizinfoData = bizinfoData.concat(data);
+      console.log(`bizinfo: ${bizinfoData.length}개 로드됨`);
+      
+      if (data.length < bizinfoLimit) break;
+      bizinfoOffset += bizinfoLimit;
+    }
 
-    // 2. kstartup_complete 데이터
-    const { data: kstartupData } = await supabase
-      .from('kstartup_complete')
-      .select('*')
-      .range(0, 10000);
+    // 2. kstartup_complete 전체 데이터 가져오기
+    console.log('kstartup_complete 데이터 로드 중...');
+    let kstartupData = [];
+    let kstartupOffset = 0;
+    const kstartupLimit = 1000;
+    
+    while (true) {
+      const { data, error } = await supabase
+        .from('kstartup_complete')
+        .select('*')
+        .range(kstartupOffset, kstartupOffset + kstartupLimit - 1);
+      
+      if (error) {
+        console.error('kstartup 에러:', error);
+        break;
+      }
+      
+      if (!data || data.length === 0) break;
+      
+      kstartupData = kstartupData.concat(data);
+      console.log(`kstartup: ${kstartupData.length}개 로드됨`);
+      
+      if (data.length < kstartupLimit) break;
+      kstartupOffset += kstartupLimit;
+    }
 
-    // 데이터 통합 및 변환
-    if (bizinfoData) {
+    console.log(`총 데이터: bizinfo ${bizinfoData.length}개 + kstartup ${kstartupData.length}개`);
+
+    // 데이터 변환 - bizinfo
+    if (bizinfoData && bizinfoData.length > 0) {
       allData = allData.concat(bizinfoData.map(item => {
         const daysRemaining = getDaysRemaining(item.reqst_end_ymd);
         
@@ -132,7 +207,7 @@ export async function GET(request) {
           start_date: item.reqst_begin_ymd,
           days_remaining: daysRemaining,
           is_expired: daysRemaining !== null && daysRemaining < 0,
-          is_urgent: daysRemaining !== null && daysRemaining <= 3,
+          is_urgent: daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3,
           status: daysRemaining < 0 ? '마감' : (item.pblanc_stts || '진행중'),
           support_scale: item.tot_sprt_amount || item.sprt_scale || '',
           organization: item.organ_nm || item.spnsr_organ_nm || '',
@@ -146,7 +221,8 @@ export async function GET(request) {
       }));
     }
 
-    if (kstartupData) {
+    // 데이터 변환 - kstartup
+    if (kstartupData && kstartupData.length > 0) {
       allData = allData.concat(kstartupData.map(item => {
         const daysRemaining = getDaysRemaining(item.pbanc_rcpt_end_dt);
         
@@ -162,7 +238,7 @@ export async function GET(request) {
           start_date: item.pbanc_rcpt_bgng_dt,
           days_remaining: daysRemaining,
           is_expired: daysRemaining !== null && daysRemaining < 0,
-          is_urgent: daysRemaining !== null && daysRemaining <= 3,
+          is_urgent: daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3,
           status: daysRemaining < 0 ? '마감' : (item.status || '진행중'),
           support_scale: item.support_type || '',
           organization: item.pbanc_ntrp_nm || item.spnsr_organ_nm || '',
@@ -176,8 +252,12 @@ export async function GET(request) {
       }));
     }
 
+    console.log(`변환된 전체 데이터: ${allData.length}개`);
+
     // 마감된 공고 제외
+    const beforeFilter = allData.length;
     allData = allData.filter(item => !item.is_expired);
+    console.log(`마감 필터링: ${beforeFilter}개 → ${allData.length}개 (${beforeFilter - allData.length}개 제외)`);
     
     // 필터링
     if (filters.businessStage) {
@@ -201,7 +281,7 @@ export async function GET(request) {
       );
     }
 
-    if (filters.region && filters.region !== '전국') {
+    if (filters.region && filters.region !== '전국' && filters.region !== '전체') {
       allData = allData.filter(item => 
         item.region.includes(filters.region)
       );
@@ -210,14 +290,14 @@ export async function GET(request) {
     if (filters.deadline) {
       allData = allData.filter(item => {
         const days = item.days_remaining;
-        if (filters.deadline === '긴급' && days !== null) return days <= 3;
-        if (filters.deadline === '이번주' && days !== null) return days <= 7;
-        if (filters.deadline === '이번달' && days !== null) return days <= 30;
+        if (filters.deadline === '긴급' && days !== null) return days >= 0 && days <= 3;
+        if (filters.deadline === '이번주' && days !== null) return days >= 0 && days <= 7;
+        if (filters.deadline === '이번달' && days !== null) return days >= 0 && days <= 30;
         return true;
       });
     }
 
-    // 검색어 필터 (벡터 검색 시뮬레이션)
+    // 검색어 필터
     if (query && query.trim() !== '') {
       const searchLower = query.toLowerCase();
       const searchWords = searchLower.split(' ');
@@ -230,13 +310,21 @@ export async function GET(request) {
       });
     }
 
-    // 정렬 (긴급한 것 우선)
+    // 정렬 (긴급한 것 우선, 그 다음 마감일 순)
     allData.sort((a, b) => {
+      // 긴급 우선
       if (a.is_urgent && !b.is_urgent) return -1;
       if (!a.is_urgent && b.is_urgent) return 1;
+      
+      // 마감일 순
       if (a.days_remaining !== null && b.days_remaining !== null) {
         return a.days_remaining - b.days_remaining;
       }
+      
+      // 마감일이 없는 것은 뒤로
+      if (a.days_remaining === null && b.days_remaining !== null) return 1;
+      if (a.days_remaining !== null && b.days_remaining === null) return -1;
+      
       return 0;
     });
 
@@ -246,7 +334,7 @@ export async function GET(request) {
       results: allData,
       total: totalCount,
       success: true,
-      message: `${totalCount}개 지원사업 (마감 제외)`
+      message: `${totalCount}개 지원사업 찾음 (마감 제외)`
     });
   } catch (error) {
     console.error('API 에러:', error);
@@ -254,6 +342,7 @@ export async function GET(request) {
       { 
         error: '데이터 조회 실패', 
         results: [],
+        total: 0,
         message: error.message
       },
       { status: 500 }
