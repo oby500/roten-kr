@@ -21,13 +21,14 @@ export default function DetailPage() {
   const loadBusinessDetail = async (businessId) => {
     setLoading(true);
     try {
-      // API 호출 시뮬레이션 - 실제로는 /api/business/[id] 엔드포인트 필요
-      const response = await fetch(`/api/search?q=${businessId}`);
-      const data = await response.json();
-      
-      // 임시로 첫 번째 결과를 상세 정보로 사용
-      if (data.results && data.results.length > 0) {
-        setBusiness(data.results[0]);
+      // 실제 API 호출
+      const response = await fetch(`/api/announcement/${businessId}`);
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setBusiness(result.data);
+      } else {
+        console.error('상세 정보 로드 실패:', result.error);
       }
     } catch (error) {
       console.error('상세 정보 로드 실패:', error);
@@ -188,57 +189,47 @@ export default function DetailPage() {
               </div>
             </div>
 
+            {/* AI 요약 */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🤖 AI 간단 요약
+              </h2>
+              <p className="text-gray-700 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {business.simple_summary || '요약 정보가 없습니다'}
+              </p>
+            </div>
+
             {/* 상세 내용 */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">사업 상세내용</h2>
-              <div className="prose max-w-none text-gray-600">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">📌 사업목적</h3>
-                    <p>{business.purpose || '중소기업의 경쟁력 강화 및 혁신성장 지원을 통한 일자리 창출과 경제 활성화'}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">📋 지원내용</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>사업화 자금 지원 (최대 {business.support_scale || '1억원'})</li>
-                      <li>기술개발 및 R&D 지원</li>
-                      <li>마케팅 및 판로개척 지원</li>
-                      <li>전문가 멘토링 및 컨설팅</li>
-                      <li>네트워킹 및 협력 기회 제공</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">✅ 신청자격</h3>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>사업자등록증을 보유한 중소기업</li>
-                      <li>창업 후 7년 이내 기업 (업종별 상이)</li>
-                      <li>신청일 기준 정상 영업 중인 기업</li>
-                      <li>국세 및 지방세 체납이 없는 기업</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">📝 신청방법</h3>
-                    <ol className="list-decimal list-inside space-y-2">
-                      <li>온라인 신청서 작성 및 제출</li>
-                      <li>구비서류 업로드
-                        <ul className="list-disc list-inside ml-6 mt-1 text-sm">
-                          <li>사업계획서</li>
-                          <li>재무제표</li>
-                          <li>사업자등록증</li>
-                          <li>기타 증빙서류</li>
-                        </ul>
-                      </li>
-                      <li>서류심사 및 현장실태조사</li>
-                      <li>선정평가위원회 심의</li>
-                      <li>최종 선정 및 협약체결</li>
-                    </ol>
-                  </div>
-                </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">📋 상세 내용</h2>
+              <div className="prose max-w-none text-gray-600 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {business.detailed_summary || '상세 내용이 없습니다'}
               </div>
             </div>
+
+            {/* 첨부파일 */}
+            {business.attachment_urls && business.attachment_urls.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">📎 첨부파일</h2>
+                <div className="space-y-2">
+                  {business.attachment_urls.map((url, idx) => (
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <FileText className="w-5 h-5 mr-3 text-primary-500" />
+                        <span className="text-sm font-medium">첨부파일 {idx + 1}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">다운로드</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 유의사항 */}
             <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
@@ -298,49 +289,42 @@ export default function DetailPage() {
             </div>
 
             {/* 신청 버튼 */}
-            <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
+            <div className={`rounded-xl p-6 text-white ${
+              business.days_remaining !== null && business.days_remaining <= 3
+                ? 'bg-gradient-to-r from-red-500 to-red-600'
+                : business.days_remaining !== null && business.days_remaining <= 7
+                ? 'bg-gradient-to-r from-orange-500 to-orange-600'
+                : 'bg-gradient-to-r from-blue-500 to-blue-600'
+            }`}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-white/80 text-sm">마감까지</p>
-                  <p className="text-2xl font-bold">D-14</p>
+                  <p className="text-2xl font-bold">
+                    {business.days_remaining === null
+                      ? '상시'
+                      : business.days_remaining === 0
+                      ? '오늘 마감'
+                      : business.days_remaining < 0
+                      ? '마감'
+                      : `D-${business.days_remaining}`}
+                  </p>
                 </div>
                 <Clock className="w-10 h-10 text-white/50" />
               </div>
-              <button className="w-full bg-white text-primary-600 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+              <a
+                href={business.apply_url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-white text-center py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                style={{ color: business.days_remaining !== null && business.days_remaining <= 3 ? '#ef4444' : business.days_remaining !== null && business.days_remaining <= 7 ? '#f97316' : '#3b82f6' }}
+              >
                 온라인 신청하기
-              </button>
+              </a>
               <p className="text-xs text-white/80 text-center mt-3">
                 * 신청 전 자격요건을 확인하세요
               </p>
             </div>
 
-            {/* 관련 서류 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">관련 서류</h2>
-              <div className="space-y-2">
-                <a href="#" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center">
-                    <FileText className="w-5 h-5 mr-3 text-primary-500" />
-                    <span className="text-sm font-medium">사업 공고문</span>
-                  </div>
-                  <span className="text-xs text-gray-500">PDF</span>
-                </a>
-                <a href="#" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center">
-                    <FileText className="w-5 h-5 mr-3 text-primary-500" />
-                    <span className="text-sm font-medium">신청서 양식</span>
-                  </div>
-                  <span className="text-xs text-gray-500">HWP</span>
-                </a>
-                <a href="#" className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center">
-                    <FileText className="w-5 h-5 mr-3 text-primary-500" />
-                    <span className="text-sm font-medium">사업계획서 양식</span>
-                  </div>
-                  <span className="text-xs text-gray-500">PPT</span>
-                </a>
-              </div>
-            </div>
 
             {/* 비슷한 사업 추천 */}
             <div className="bg-white rounded-xl shadow-lg p-6">
