@@ -7,11 +7,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [supportData, setSupportData] = useState([]);
   const [displayData, setDisplayData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [viewMode, setViewMode] = useState('card');
   const [favorites, setFavorites] = useState([]);
-  const [activeTab, setActiveTab] = useState('전체사업');
+  const [activeTab, setActiveTab] = useState('홈');
   const [showQuickStart, setShowQuickStart] = useState(true);
   
   // 필터 상태
@@ -24,32 +24,44 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // 초기 데이터 로드
+  // 초기 데이터 로드 (홈 탭이 아닐 때만)
   useEffect(() => {
-    console.log('초기 데이터 로드 시작');
-    loadAllData();
+    // 즐겨찾기 로드
+    const saved = localStorage.getItem('favorites');
+    if (saved) {
+      setFavorites(JSON.parse(saved));
+    }
+
+    // 통계만 로드 (빠른 응답)
+    loadStats();
   }, []);
 
-  // 데이터 로드 함수
-  const loadAllData = async () => {
-    setLoading(true);
+  // 통계 데이터만 로드하는 함수
+  const loadStats = async () => {
     try {
-      // 통계 데이터
-      console.log('통계 데이터 로드 중...');
       const statsRes = await fetch('/api/stats');
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
-        console.log('통계 데이터:', statsData);
       }
+    } catch (error) {
+      console.error('통계 로드 에러:', error);
+    }
+  };
 
-      // 전체 데이터 - limit 제거하여 전체 데이터 가져오기
+  // 전체 데이터 로드 함수
+  const loadAllData = async () => {
+    // 이미 로드되어 있으면 스킵
+    if (supportData.length > 0) return;
+
+    setLoading(true);
+    try {
+      // 전체 데이터
       console.log('전체 데이터 로드 중...');
       const dataRes = await fetch('/api/search?q=');
       if (dataRes.ok) {
         const data = await dataRes.json();
         console.log('받은 데이터:', data.results?.length, '개');
-        console.log('API 메시지:', data.message);
         setSupportData(data.results || []);
         setDisplayData(data.results || []);
       } else {
@@ -60,19 +72,18 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-
-    // 즐겨찾기 로드
-    const saved = localStorage.getItem('favorites');
-    if (saved) {
-      setFavorites(JSON.parse(saved));
-    }
   };
 
   // 빠른 시작 옵션 선택
   const handleQuickStart = async (option) => {
     setShowQuickStart(false);
+
+    // 데이터가 없으면 먼저 로드
+    if (supportData.length === 0) {
+      await loadAllData();
+    }
+
     setLoading(true);
-    
     let filtered = [...supportData];
     
     switch(option) {
@@ -114,7 +125,13 @@ export default function Home() {
   };
 
   // 검색 실행
-  const executeSearch = () => {
+  const executeSearch = async () => {
+    // 데이터가 없으면 먼저 로드
+    if (supportData.length === 0) {
+      await loadAllData();
+      return;
+    }
+
     console.log('검색 실행:', searchQuery);
     let filtered = [...supportData];
 
@@ -203,13 +220,18 @@ export default function Home() {
   }, [selectedRegion, selectedStage, selectedDeadline, activeTab]);
 
   // 탭 변경
-  const handleTabChange = (tab) => {
+  const handleTabChange = async (tab) => {
     console.log('탭 변경:', tab);
     setActiveTab(tab);
+
     if (tab === '홈') {
       setShowQuickStart(true);
     } else {
       setShowQuickStart(false);
+      // 전체사업 탭으로 이동 시 데이터 로드
+      if (tab === '전체사업' && supportData.length === 0) {
+        await loadAllData();
+      }
     }
   };
 
