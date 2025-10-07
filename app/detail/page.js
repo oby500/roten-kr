@@ -342,20 +342,6 @@ export default function DetailPage() {
                 * 신청 전 자격요건을 확인하세요
               </p>
             </div>
-
-
-            {/* 비슷한 사업 추천 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">비슷한 지원사업</h2>
-              <div className="space-y-3">
-                {[1, 2, 3].map((item) => (
-                  <a key={item} href="#" className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <p className="font-medium text-sm text-gray-900 mb-1">청년창업 사관학교</p>
-                    <p className="text-xs text-gray-500">중소벤처기업부 • ~12.31</p>
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </main>

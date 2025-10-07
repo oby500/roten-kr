@@ -11,6 +11,19 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
+// HTML 엔티티 디코딩
+function decodeHtmlEntities(text) {
+  if (!text) return text;
+  return text
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'");
+}
+
 // D-day 계산
 function getDaysRemaining(endDate) {
   if (!endDate) return null;
@@ -50,17 +63,17 @@ export async function GET(request, { params }) {
 
         data = {
           id: `biz_${data.id}`,
-          business_name: data.pblanc_nm || data.bsns_title || '제목 없음',
-          organization: data.organ_nm || data.spnsr_organ_nm || '기관명 없음',
+          business_name: decodeHtmlEntities(data.pblanc_nm || data.bsns_title) || '제목 없음',
+          organization: decodeHtmlEntities(data.organ_nm || data.spnsr_organ_nm) || '기관명 없음',
           region: data.loc_nm || data.loc_rstr || '전국',
           start_date: data.reqst_begin_ymd,
           end_date: data.reqst_end_ymd,
           days_remaining: daysRemaining,
           support_scale: data.tot_sprt_amount || data.sprt_scale || '협의',
-          target: data.sprt_trgt || '중소기업',
-          simple_summary: data.bsns_sumry || '지원사업입니다',
-          detailed_summary: data.pblanc_cn || data.sprt_cn || '상세 내용이 없습니다',
-          purpose: data.bsns_purpose || '중소기업 지원',
+          target: decodeHtmlEntities(data.sprt_trgt) || '중소기업',
+          simple_summary: decodeHtmlEntities(data.simple_summary_ai || data.bsns_sumry) || '지원사업입니다',
+          detailed_summary: decodeHtmlEntities(data.detailed_summary_ai || data.pblanc_cn || data.sprt_cn) || '상세 내용이 없습니다',
+          purpose: decodeHtmlEntities(data.bsns_purpose) || '중소기업 지원',
           attachment_urls: data.attachment_urls || [],
           detail_url: data.dtl_url || '',
           apply_url: data.aply_url || '',
@@ -87,17 +100,17 @@ export async function GET(request, { params }) {
 
         data = {
           id: `ks_${data.id}`,
-          business_name: data.biz_pbanc_nm || data.bsns_title || '제목 없음',
-          organization: data.pbanc_ntrp_nm || data.spnsr_organ_nm || '기관명 없음',
+          business_name: decodeHtmlEntities(data.biz_pbanc_nm || data.bsns_title) || '제목 없음',
+          organization: decodeHtmlEntities(data.pbanc_ntrp_nm || data.spnsr_organ_nm) || '기관명 없음',
           region: data.supt_regin || '전국',
           start_date: data.pbanc_rcpt_bgng_dt,
           end_date: data.pbanc_rcpt_end_dt,
           days_remaining: daysRemaining,
           support_scale: data.support_type || '협의',
-          target: data.aply_trgt_ctnt || '중소기업',
-          simple_summary: data.bsns_sumry || '지원사업입니다',
-          detailed_summary: data.pbanc_ctnt || '상세 내용이 없습니다',
-          purpose: data.bsns_purpose || '중소기업 지원',
+          target: decodeHtmlEntities(data.aply_trgt_ctnt) || '중소기업',
+          simple_summary: decodeHtmlEntities(data.simple_summary_ai || data.bsns_sumry) || '지원사업입니다',
+          detailed_summary: decodeHtmlEntities(data.detailed_summary_ai || data.pbanc_ctnt) || '상세 내용이 없습니다',
+          purpose: decodeHtmlEntities(data.bsns_purpose) || '중소기업 지원',
           attachment_urls: data.attachment_urls || [],
           detail_url: data.detl_pg_url || data.biz_gdnc_url || '',
           apply_url: data.biz_aply_url || '',
