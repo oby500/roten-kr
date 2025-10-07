@@ -91,30 +91,21 @@ function generateSummary(item) {
     });
   }
   
-  // 3. 특별 포인트 (마감일 또는 주요 내용)
-  const daysLeft = getDaysRemaining(item.reqst_end_ymd || item.pbanc_rcpt_end_dt);
-  if (daysLeft !== null && daysLeft >= 0 && daysLeft <= 7) {
+  // 3. 특별 포인트 (주요 내용)
+  const content = item.bsns_sumry || item.pblanc_cn || item.sprt_cn || '';
+  if (content) {
+    const shortContent = content.substring(0, 40) + (content.length > 40 ? '...' : '');
     summaryPoints.push({
-      icon: '⚡',
-      label: '긴급',
-      text: daysLeft === 0 ? '오늘 마감!' : `마감 ${daysLeft}일 전!`
+      icon: '🎯',
+      label: '특징',
+      text: shortContent
     });
   } else {
-    const content = item.bsns_sumry || item.pblanc_cn || item.sprt_cn || '';
-    if (content) {
-      const shortContent = content.substring(0, 40) + (content.length > 40 ? '...' : '');
-      summaryPoints.push({
-        icon: '🎯',
-        label: '특징',
-        text: shortContent
-      });
-    } else {
-      summaryPoints.push({
-        icon: '🎯',
-        label: '특징',
-        text: '우수 기업 선정 지원'
-      });
-    }
+    summaryPoints.push({
+      icon: '🎯',
+      label: '특징',
+      text: '우수 기업 선정 지원'
+    });
   }
   
   return summaryPoints;
