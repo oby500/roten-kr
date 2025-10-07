@@ -284,33 +284,6 @@ export default function Home() {
   };
 
   // 스마트 검색 핸들러
-  const handleSmartSearch = async (formData) => {
-    setShowQuickStart(false);
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/search/smart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setSupportData(result.data);
-        setDisplayData(result.data);
-        // 전체사업 탭으로 전환
-        setActiveTab('전체사업');
-      } else {
-        console.error('스마트 검색 실패:', result.error);
-      }
-    } catch (error) {
-      console.error('스마트 검색 에러:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // 검색 실행
   const executeSearch = async () => {
