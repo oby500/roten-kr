@@ -249,21 +249,6 @@ export default function DetailPage() {
               </div>
             )}
 
-            {/* 유의사항 */}
-            <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
-              <div className="flex items-start">
-                <AlertCircle className="w-6 h-6 text-amber-600 mt-1 mr-3 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">유의사항</h3>
-                  <ul className="text-sm text-gray-700 space-y-1">
-                    <li>• 동일 사업 중복 신청 불가</li>
-                    <li>• 제출된 서류는 반환되지 않음</li>
-                    <li>• 허위 정보 기재 시 선정 취소 및 제재 조치</li>
-                    <li>• 선정 후 의무사항 미이행 시 지원금 환수</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* 오른쪽: 사이드바 */}

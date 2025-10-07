@@ -42,15 +42,36 @@ function parseTarget(item) {
 // 지원 유형 파싱
 function parseSupportType(item) {
   const types = [];
-  const text = `${item.sprt_cn || ''} ${item.support_type || ''} ${item.supt_biz_clsfc || ''}`;
-  
-  if (text.includes('자금') || text.includes('금융') || text.includes('융자')) types.push('자금지원');
-  if (text.includes('R&D') || text.includes('연구개발') || text.includes('기술개발')) types.push('R&D');
-  if (text.includes('교육') || text.includes('멘토링') || text.includes('컨설팅')) types.push('교육/컨설팅');
-  if (text.includes('시설') || text.includes('공간') || text.includes('입주')) types.push('시설/공간');
-  if (text.includes('마케팅') || text.includes('판로') || text.includes('수출')) types.push('마케팅/판로');
-  if (text.includes('인력') || text.includes('고용') || text.includes('인건비')) types.push('인력지원');
-  
+  // 더 많은 필드 검색
+  const text = `${item.pblanc_nm || ''} ${item.biz_pbanc_nm || ''} ${item.bsns_title || ''} ${item.sprt_cn || ''} ${item.support_type || ''} ${item.supt_biz_clsfc || ''} ${item.bsns_sumry || ''} ${item.pbanc_ctnt || ''}`.toLowerCase();
+
+  // 우선순위 높은 것부터 체크 (중복 방지)
+  if (text.includes('자금') || text.includes('금융') || text.includes('융자') || text.includes('보조금') || text.includes('출연')) {
+    types.push('자금지원');
+  }
+  if (text.includes('r&d') || text.includes('연구개발') || text.includes('기술개발') || text.includes('연구') || text.includes('개발과제')) {
+    types.push('R&D');
+  }
+  if (text.includes('교육') || text.includes('멘토링') || text.includes('컨설팅') || text.includes('교육과정') || text.includes('훈련')) {
+    types.push('교육/컨설팅');
+  }
+  if (text.includes('시설') || text.includes('공간') || text.includes('입주') || text.includes('인프라')) {
+    types.push('시설/공간');
+  }
+  if (text.includes('마케팅') || text.includes('판로') || text.includes('수출') || text.includes('해외진출') || text.includes('글로벌')) {
+    types.push('마케팅/판로');
+  }
+  if (text.includes('인력') || text.includes('고용') || text.includes('인건비') || text.includes('채용')) {
+    types.push('인력지원');
+  }
+
+  // 타입이 없으면 제목에서 힌트 찾기
+  if (types.length === 0) {
+    if (text.includes('창업')) types.push('창업지원');
+    if (text.includes('혁신')) types.push('혁신지원');
+    if (text.includes('성장')) types.push('성장지원');
+  }
+
   return types;
 }
 

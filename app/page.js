@@ -277,6 +277,20 @@ export default function Home() {
     return `D-${days}`;
   };
 
+  // 지원 유형별 색상 반환
+  const getSupportTypeColor = (type) => {
+    if (type.includes('자금')) return 'bg-green-100 text-green-700';
+    if (type.includes('R&D')) return 'bg-blue-100 text-blue-700';
+    if (type.includes('교육') || type.includes('컨설팅')) return 'bg-purple-100 text-purple-700';
+    if (type.includes('시설') || type.includes('공간')) return 'bg-yellow-100 text-yellow-700';
+    if (type.includes('마케팅') || type.includes('판로')) return 'bg-pink-100 text-pink-700';
+    if (type.includes('인력')) return 'bg-indigo-100 text-indigo-700';
+    if (type.includes('창업')) return 'bg-teal-100 text-teal-700';
+    if (type.includes('혁신')) return 'bg-cyan-100 text-cyan-700';
+    if (type.includes('성장')) return 'bg-lime-100 text-lime-700';
+    return 'bg-gray-100 text-gray-600';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* 헤더 */}
@@ -545,7 +559,7 @@ export default function Home() {
                           {/* 지원 유형 */}
                           {item.support_types && item.support_types.length > 0 ? (
                             item.support_types.slice(0, 2).map((type, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                              <span key={idx} className={`px-2 py-1 rounded-full text-xs ${getSupportTypeColor(type)}`}>
                                 {type}
                               </span>
                             ))
@@ -607,7 +621,7 @@ export default function Home() {
                           </span>
                           {item.support_types && item.support_types.length > 0 ? (
                             item.support_types.slice(0, 2).map((type, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                              <span key={idx} className={`px-2 py-1 rounded-full text-xs ${getSupportTypeColor(type)}`}>
                                 {type}
                               </span>
                             ))
