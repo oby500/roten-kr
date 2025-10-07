@@ -531,21 +531,34 @@ export default function Home() {
                   {viewMode === 'card' ? (
                     <>
                       {/* 상단 태그 영역 */}
-                      <div className="p-4 border-b">
-                        <div className="flex flex-wrap gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDdayColor(item.days_remaining)}`}>
-                            {getDdayText(item.days_remaining)}
-                          </span>
-                          {item.region && (
+                      <div className="p-4 border-b bg-gray-50">
+                        <div className="flex flex-col gap-2">
+                          {/* 첫 번째 줄: D-day */}
+                          <div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDdayColor(item.days_remaining)}`}>
+                              {getDdayText(item.days_remaining)}
+                            </span>
+                          </div>
+                          {/* 두 번째 줄: 지역 */}
+                          <div>
                             <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                              📍 {item.region}
+                              📍 {item.region || '전국'}
                             </span>
-                          )}
-                          {item.support_types?.slice(0, 2).map((type, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
-                              {type}
-                            </span>
-                          ))}
+                          </div>
+                          {/* 세 번째 줄: 지원 유형 */}
+                          <div className="flex flex-wrap gap-2">
+                            {item.support_types && item.support_types.length > 0 ? (
+                              item.support_types.slice(0, 2).map((type, idx) => (
+                                <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                                  {type}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                                지원사업
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
@@ -587,15 +600,25 @@ export default function Home() {
                       </div>
                     </>
                   ) : (
-                    <div className="p-6 flex items-center justify-between">
+                    <div className="p-6 flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        {/* 태그 영역 */}
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDdayColor(item.days_remaining)}`}>
                             {getDdayText(item.days_remaining)}
                           </span>
-                          {item.region && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                              📍 {item.region}
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                            📍 {item.region || '전국'}
+                          </span>
+                          {item.support_types && item.support_types.length > 0 ? (
+                            item.support_types.slice(0, 2).map((type, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                                {type}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                              지원사업
                             </span>
                           )}
                         </div>
@@ -614,7 +637,7 @@ export default function Home() {
                           e.stopPropagation();
                           toggleFavorite(item.id);
                         }}
-                        className="p-2"
+                        className="p-2 ml-4"
                       >
                         <Star className={`w-5 h-5 ${favorites.includes(item.id) ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400'}`} />
                       </button>
